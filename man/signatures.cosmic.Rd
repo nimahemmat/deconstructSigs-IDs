@@ -4,7 +4,9 @@
 \name{signatures.cosmic}
 \alias{signatures.cosmic}
 \title{Published Signatures from Sanger COSMIC}
-\format{A data frame of 30 rows and 96 columns}
+\format{
+A data frame of 30 rows and 96 columns
+}
 \source{
 \url{http://cancer.sanger.ac.uk/cosmic/signatures}
 }

@@ -148,3 +148,57 @@ makePie(plot_example, sub = 'example')
 ```
 
 ![alt text](inst/extdata/makePie.png)
+
+## 🔧 Modifications in This Fork
+
+This fork of the `deconstructSigs` package adds full support for **COSMIC ID (Indel) Signatures**, allowing decomposition of indel mutational processes in addition to SBS and DBS signatures.
+
+### 🆕 New Features
+
+- ✅ **`whichIDSignatures()`** – new function to estimate contributions of COSMIC ID signatures to indel mutation profiles.
+- ✅ **`cosmic.id.signatures` dataset** – COSMIC v3.4 GRCh37 indel signature matrix (available via `data(cosmic.id.signatures)`).
+- ✅ **`classify_indel_COSMIC()`** – internal logic to classify each indel into one of the 83 ID signature contexts.
+- ✅ **Extended `mut.to.sigs.input()`** – now supports `sig.type = "ID"` to process indel mutations and assign correct contexts.
+
+### 🧬 Extended Functionality
+
+```r
+# Step 1: Convert VCF-style indel mutations to signature input format
+sigs_input <- mut.to.sigs.input(
+  mut.ref = my_indel_df,
+  sample.id = "sample_id",
+  chr = "chr",
+  pos = "pos",
+  ref = "ref",
+  alt = "alt",
+  bsg = BSgenome.Hsapiens.UCSC.hg38,  # Required for ID context classification
+  sig.type = "ID"
+)
+
+# Step 2: Load COSMIC ID signature matrix
+data(cosmic.id.signatures)
+
+# Step 3: Determine which ID signatures are active in this sample
+res <- whichIDSignatures(
+  tumor.ref = sigs_input,
+  sample.id = "sample_id",
+  signatures.ref = cosmic.id.signatures
+)
+
+# Step 4: View results
+res$weight
+
+⚠️ Note: BSgenome is required because indel context classification needs reference sequence context (e.g., flanking bases, repeat motifs).
+
+
+📦 Notes
+Works on COSMIC v3.4 (ID signatures)
+
+Compatible with BSgenome.Hsapiens.UCSC.hg19 or hg38
+
+No changes made to existing SBS/DBS functionality
+
+whichIDSignatures() is analogous in behavior to whichSignatures()s
+
+📜 Acknowledgement
+This fork was modified and extended by Nima Hemmat, with the intent of supporting broader mutational signature analysis including INDEL-based processes (e.g., MMRd-associated indels).

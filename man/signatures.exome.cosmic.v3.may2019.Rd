@@ -4,7 +4,9 @@
 \name{signatures.exome.cosmic.v3.may2019}
 \alias{signatures.exome.cosmic.v3.may2019}
 \title{Updated SBS Exome Signatures from Sanger COSMIC (May 2019)}
-\format{A data frame of 65 rows and 96 columns}
+\format{
+A data frame of 65 rows and 96 columns
+}
 \source{
 \url{https://www.synapse.org/#!Synapse:syn12009743}
 }

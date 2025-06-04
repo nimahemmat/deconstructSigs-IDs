@@ -4,7 +4,9 @@
 \name{signatures.dbs.cosmic.v3.may2019}
 \alias{signatures.dbs.cosmic.v3.may2019}
 \title{New DBS Signatures from Sanger COSMIC (May 2019)}
-\format{A data frame of 11 rows and 78 columns}
+\format{
+A data frame of 11 rows and 78 columns
+}
 \source{
 \url{https://www.synapse.org/#!Synapse:syn12009743}
 }

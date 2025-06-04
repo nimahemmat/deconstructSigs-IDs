@@ -168,6 +168,122 @@ mut.to.sigs.input = function(mut.ref, sample.id = 'Sample', chr = 'chr', pos = '
     final.df = data.frame(final.matrix, check.names = FALSE)
   }
   
+  if (sig.type == 'ID') {
+    mut[, ref] <- as.character(mut[, ref])
+    mut[, alt] <- as.character(mut[, alt])
+    
+    # Filter to only indels
+    mut <- mut[nchar(mut[, ref]) != 1 | nchar(mut[, alt]) != 1, ]
+    if (nrow(mut) == 0) stop("No indels found for ID signature analysis.")
+    
+    # Set reference genome if not provided
+    if (is.null(bsg)) {
+      bsg <- BSgenome.Hsapiens.UCSC.hg19::Hsapiens
+    }
+    
+    # --- Supporting Functions ---
+    
+    # Load the list of COSMIC ID mutation types
+    get_cosmic_id_categories <- function() {
+      return(c(
+        paste0("1:Del:C:", 0:5), paste0("1:Del:T:", 0:5),
+        paste0("1:Ins:C:", 0:5), paste0("1:Ins:T:", 0:5),
+        outer(2:5, 0:5, function(len, rep) paste0(len, ":Del:R:", rep)) |> as.vector(),
+        outer(2:5, 0:5, function(len, rep) paste0(len, ":Ins:R:", rep)) |> as.vector(),
+        "2:Del:M:1", "3:Del:M:1", "3:Del:M:2",
+        "4:Del:M:1", "4:Del:M:2", "4:Del:M:3",
+        "5:Del:M:1", "5:Del:M:2", "5:Del:M:3", "5:Del:M:4", "5:Del:M:5"
+      ))
+    }
+    
+    # Classify indel into a COSMIC ID category
+    classify_indel_COSMIC <- function(m, bsg) {
+      chr <- m[["chr"]]
+      pos <- as.numeric(m[["pos"]])
+      ref <- m[["ref"]]
+      alt <- m[["alt"]]
+      
+      is_del <- nchar(ref) > nchar(alt)
+      indel_len <- abs(nchar(ref) - nchar(alt))
+      
+      # Handle 1 bp indels
+      if (indel_len == 1) {
+        base <- if (is_del) substr(ref, 2, 2) else substr(alt, 2, 2)
+        base <- if (base %in% c("A", "G")) "R" else base  # Normalize purines
+        context <- as.character(Biostrings::getSeq(bsg, chr, pos - 20, pos + 20))
+        rep_count <- count_repeat_context(base, context)
+        return(paste0("1:", ifelse(is_del, "Del", "Ins"), ":", base, ":", rep_count))
+      }
+      
+      # Handle 2–5 bp insertions and deletions
+      if (indel_len >= 2 && indel_len <= 5) {
+        context <- as.character(Biostrings::getSeq(bsg, chr, pos - 20, pos + 20))
+        rep_count <- count_repeat_context("R", context)
+        return(paste0(indel_len, ":", ifelse(is_del, "Del", "Ins"), ":R:", rep_count))
+      }
+      
+      # Handle microhomology deletions >=2 bp
+      if (is_del && indel_len >= 2) {
+        del_seq <- substr(ref, 2, nchar(ref))
+        flank3 <- as.character(Biostrings::getSeq(bsg, chr, pos + nchar(ref), pos + nchar(ref) + 19))
+        mh_len <- microhomology_length(del_seq, flank3)
+        return(paste0(indel_len, ":Del:M:", mh_len))
+      }
+      
+      # Fallback classification
+      return("Unclassified")
+    }
+    
+    # Count repeat units of a single base in a sequence
+    count_repeat_context <- function(base, context) {
+      count <- 0
+      chars <- strsplit(context, split = "")[[1]]
+      for (i in seq_along(chars)) {
+        if (chars[i] == base) {
+          count <- count + 1
+        } else {
+          break
+        }
+      }
+      return(min(count, 5))
+    }
+    
+    # Measure microhomology between deleted sequence and downstream flank
+    microhomology_length <- function(deleted_seq, flank_seq) {
+      max_len <- min(nchar(deleted_seq), nchar(flank_seq))
+      mh <- 0
+      for (i in 1:max_len) {
+        if (substr(deleted_seq, 1, i) == substr(flank_seq, 1, i)) {
+          mh <- i
+        } else {
+          break
+        }
+      }
+      return(min(mh, 5))
+    }
+    
+    # Normalize chromosome names
+    mut[, chr] <- as.character(mut[, chr])
+    mut[, chr] <- ifelse(grepl("^chr", mut[, chr]), mut[, chr], paste0("chr", mut[, chr]))
+    valid_chrs <- GenomeInfoDb::seqnames(bsg)
+    mut <- mut[mut[, chr] %in% valid_chrs, ]
+    
+    # Classify indels into COSMIC ID categories
+    mut$ID_category <- sapply(1:nrow(mut), function(i) {
+      classify_indel_COSMIC(mut[i, ], bsg)
+    })
+    
+    # Create factor for COSMIC ID categories
+    id_types <- get_cosmic_id_categories()
+    mut$ID_category <- factor(mut$ID_category, levels = id_types)
+    
+    # Create count matrix: sample x ID category
+    final.df <- as.data.frame.matrix(
+      table(mut[, sample.id], mut$ID_category),
+      stringsAsFactors = FALSE
+    )
+  }
+  
   bad = names(which(rowSums(final.df) <= 50))
   if(length(bad) > 0){
     bad = paste(bad, collapse = ',\ ')
