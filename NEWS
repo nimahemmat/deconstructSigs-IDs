@@ -5,3 +5,22 @@ Changes:
 
 * Include function to allow for a VCF file as input
 * Add parameter in mut.to.sigs.input to allow for alternative genome versions
+
+# deconstructSigs 1.9.1 (Unreleased)
+
+## 🔥 New Features
+- Added support for COSMIC v3.4 **ID (Indel) Signatures**.
+- New function: `whichIDSignatures()` – estimates exposure to ID signatures.
+- `mut.to.sigs.input()` now supports `sig.type = "ID"` for indel mutation classification.
+- Added dataset: `cosmic.id.signatures` (COSMIC v3.4).
+- Internal: added `classify_indel_COSMIC()` and reference-sequence-dependent classification for IDs.
+- Updated `DESCRIPTION` and `NAMESPACE` accordingly.
+
+## ⚠️ Dependencies
+- Added `nnls` as a required package.
+
+## 🧪 Testing
+- Tested on COSMIC ID data,inputs.
+- Compatible with `BSgenome.Hsapiens.UCSC.hg19` or `hg38`.
+
+---
