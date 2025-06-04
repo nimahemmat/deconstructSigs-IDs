@@ -187,6 +187,18 @@ res <- whichIDSignatures(
 
 # Step 4: View results
 res$weight
+```
+✅ Install from GitHub (ID support branch)
+
+```r
+# Install devtools if not already installed
+install.packages("devtools")
+
+# Install from the add-id-signatures branch of the fork
+devtools::install_github("nimahemmat/deconstructSigs-IDs", ref = "add-id-signatures")
+
+library(deconstructSigs)
+```
 
 ⚠️ Note: BSgenome is required because indel context classification needs reference sequence context (e.g., flanking bases, repeat motifs).
 
