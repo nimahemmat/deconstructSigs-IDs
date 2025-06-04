@@ -14,10 +14,12 @@ Imports:
     reshape2,
     BSgenome,
     BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
     GenomeInfoDb,
     grDevices,
     graphics,
-    utils
+    utils,
+    nnls
 Suggests:
     VariantAnnotation
 LazyData: yes
