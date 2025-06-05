@@ -57,6 +57,14 @@ whichIDSignatures <- function(tumor.ref,
   
   unknown <- 1 - sum(weights, na.rm = TRUE)
   
+  x <- matrix(0, 
+              nrow = 1, 
+              ncol = nrow(signatures.ref), 
+              dimnames = list(sample.id, rownames(signatures.ref)))
+  x <- as.data.frame(x)
+  x[names(weights)] <- weights
+  weights <- x
+  
   return(list(
     weights = weights,
     tumor = tumor,
