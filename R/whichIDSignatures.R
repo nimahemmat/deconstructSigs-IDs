@@ -64,6 +64,7 @@ whichIDSignatures <- function(tumor.ref,
   x <- as.data.frame(x)
   x[names(weights)] <- weights
   weights <- x
+  weights <- as.data.frame(weights)
   
   return(list(
     weights = weights,
